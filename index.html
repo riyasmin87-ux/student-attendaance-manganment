@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Smart AI Attendance</title>
+<style>
+:root{--bg:#070707;--card:#111;--card2:#181818;--text:#fff;--muted:#9ca3af;--border:#2a2a2a;--primary:#6366f1;--green:#22c55e;--red:#ef4444;--orange:#f59e0b}
+body.light{--bg:#f4f7fb;--card:#fff;--card2:#eef2f7;--text:#111827;--muted:#64748b;--border:#dbe2ea}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;transition:.25s}
+button,input,select{font:inherit}button{cursor:pointer}
+.hidden{display:none!important}.page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.box{width:430px;max-width:100%;background:var(--card);border:1px solid var(--border);border-radius:22px;padding:30px;box-shadow:0 15px 40px #0004}
+.logo{width:70px;height:70px;border-radius:18px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:grid;place-items:center;font-size:34px;margin:auto}
+h1{margin:15px 0 8px}.muted{color:var(--muted)}label{display:block;margin:14px 0 7px;color:var(--muted);font-size:14px}
+input,select{width:100%;padding:13px;border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--text);outline:0}
+button.primary{width:100%;padding:13px;border:0;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-weight:bold}
+button.secondary{padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--text)}
+.link{color:#818cf8;cursor:pointer;text-align:center;margin-top:15px}
+.biometric{min-height:100vh;background:#000;color:#fff;display:grid;place-items:center;text-align:center;padding:20px}
+.finger{font-size:105px;animation:pulse 1.3s infinite}@keyframes pulse{50%{transform:scale(1.08);opacity:.65}}
+.dashboard{min-height:100vh;display:flex}.sidebar{width:240px;position:fixed;inset:0 auto 0 0;background:var(--card);border-right:1px solid var(--border);padding:24px 14px;z-index:5}
+.brand{font-size:20px;font-weight:bold;text-align:center;margin-bottom:28px}.menu button{display:block;width:100%;text-align:left;padding:13px;margin:5px 0;border:0;border-radius:10px;background:transparent;color:var(--muted)}.menu button:hover{background:var(--card2);color:var(--text)}
+.main{margin-left:240px;padding:28px;flex:1}.top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:25px}
+.section{display:none}.section.active{display:block}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.card,.panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px}.card h2{font-size:28px;margin:8px 0}.green{color:var(--green)}.red{color:var(--red)}.orange{color:var(--orange)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}.code{font-size:50px;font-weight:bold;letter-spacing:9px;text-align:center;color:#818cf8;margin:25px 0}.timer{text-align:center;color:var(--orange);font-size:20px}.notice{padding:15px;border-radius:10px;background:var(--card2);margin-top:15px}
+table{width:100%;border-collapse:collapse}th,td{padding:12px;border-bottom:1px solid var(--border);text-align:left}th{color:var(--muted);font-size:13px}
+video{width:100%;max-width:520px;border-radius:15px;background:#000}.camera{text-align:center}.avatar{width:90px;height:90px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:28px;font-weight:bold;margin-bottom:20px}
+.toast{position:fixed;right:20px;bottom:20px;padding:16px 20px;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 10px 30px #0005;z-index:20}
+@media(max-width:850px){.sidebar{width:70px}.brand{font-size:0}.menu button{font-size:0;text-align:center}.main{margin-left:70px}.cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.grid2,.cards{grid-template-columns:1fr}.top{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage" class="page">
+<div class="box">
+<div class="logo">🎓</div>
+<h1 style="text-align:center">Smart AI Attendance</h1>
+<p class="muted" style="text-align:center">Teacher & Student Portal</p>
+
+<label>Login As</label>
+<select id="loginRole" onchange="switchLogin()">
+<option value="student">Student</option><option value="teacher">Teacher</option>
+</select>
+
+<div id="studentLogin">
+<label>Register Number</label><input id="loginRegister" placeholder="REG20260045">
+<label>Password</label><input id="loginPassword" type="password" placeholder="Password">
+<button class="primary" onclick="studentLogin()">Login</button>
+<div class="link" onclick="showCreate()">Create Student Account</div>
+<div class="link" onclick="showForgot()">Forgot Password?</div>
+</div>
+
+<div id="teacherLogin" class="hidden">
+<label>Teacher ID</label><input id="teacherId" placeholder="teacher01">
+<label>Password</label><input id="teacherPass" type="password" placeholder="1234">
+<button class="primary" onclick="teacherLogin()">Teacher Login</button>
+</div>
+
+<p class="muted" style="font-size:12px;text-align:center;margin-top:18px">
+Demo Teacher: teacher01 / 1234<br>Demo Student: REG20260045 / 1234
+</p>
+</div>
+</div>
+
+<!-- CREATE ACCOUNT -->
+<div id="createPage" class="page hidden">
+<div class="box">
+<h2>🆕 Create Student Account</h2>
+<p class="muted">Register your student details.</p>
+<label>Full Name</label><input id="newName">
+<label>Roll Number</label><input id="newRoll">
+<label>Register Number</label><input id="newRegister">
+<label>Phone Number</label><input id="newPhone">
+<label>Gmail</label><input id="newEmail" type="email">
+<label>Password</label><input id="newPassword" type="password">
+<label>Repeat Password</label><input id="newPassword2" type="password">
+<button class="primary" onclick="createAccount()">Create Account</button>
+<div class="link" onclick="backLogin()">← Back to Login</div>
+</div>
+</div>
+
+<!-- FORGOT PASSWORD -->
+<div id="forgotPage" class="page hidden">
+<div class="box">
+<h2>🔑 Forgot Password</h2>
+<label>Register Number</label><input id="forgotRegister">
+<label>Phone or Gmail</label><input id="forgotContact" placeholder="Phone or Gmail">
+<button class="primary" onclick="sendOTP()">Send Verification Code</button>
+<div id="otpArea" class="hidden">
+<label>Verification Code</label><input id="otp" inputmode="numeric" maxlength="6">
+<label>New Password</label><input id="forgotNew" type="password">
+<label>Repeat New Password</label><input id="forgotNew2" type="password">
+<button class="primary" onclick="resetPassword()">Verify & Change Password</button>
+</div>
+<div class="link" onclick="backLogin()">← Back to Login</div>
+</div>
+</div>
+
+<!-- BIOMETRIC -->
+<div id="biometricPage" class="biometric hidden">
+<div><h1>🔒 Biometric Verification</h1><div class="finger">☝</div><h2 id="bioText">Verifying registered fingerprint...</h2><p class="muted">Demo biometric screen</p></div>
+</div>
+
+<!-- STUDENT -->
+<div id="studentDash" class="dashboard hidden">
+<aside class="sidebar">
+<div class="brand">🎓 Student</div>
+<div class="menu">
+<button onclick="studentSection('sHome')">🏠 Dashboard</button>
+<button onclick="studentSection('sAttendance')">📷 Mark Attendance</button>
+<button onclick="studentSection('sHistory')">📅 History</button>
+<button onclick="studentSection('sProfile')">👤 Profile</button>
+<button onclick="logout()">🚪 Logout</button>
+</div>
+</aside>
+<main class="main">
+<div class="top"><div><h1>Student Dashboard</h1><p class="muted" id="studentWelcome"></p></div><button class="secondary" onclick="toggleTheme()">🌙 / ☀️</button></div>
+
+<section id="sHome" class="section active">
+<div class="cards">
+<div class="card"><p class="muted">Attendance</p><h2 class="green" id="sPercent">0%</h2></div>
+<div class="card"><p class="muted">Present</p><h2 id="sPresent">0</h2></div>
+<div class="card"><p class="muted">Absent</p><h2 class="red" id="sAbsent">0</h2></div>
+<div class="card"><p class="muted">Total Classes</p><h2 id="sTotal">0</h2></div>
+</div>
+<div class="panel" style="margin-top:18px"><h2>Attendance Status</h2><div id="sNotice" class="notice">Enter the teacher's active code to mark attendance.</div></div>
+</section>
+
+<section id="sAttendance" class="section">
+<div class="panel">
+<h2>🔢 Teacher Attendance Code</h2>
+<p class="muted">Enter the 6-digit code generated by your teacher.</p>
+<input id="studentCode" inputmode="numeric" maxlength="6" placeholder="000000">
+<button class="primary" onclick="checkAttendanceCode()">Verify Code</button>
+<div id="codeStatus" class="notice"></div>
+</div>
+<div id="cameraPanel" class="panel camera hidden" style="margin-top:18px">
+<h2>📷 Face Verification</h2>
+<p class="muted">Allow camera access and verify your registered face.</p>
+<video id="video" autoplay playsinline></video><br><br>
+<button class="primary" onclick="verifyFace()">Verify Face & Submit Attendance</button>
+<div id="faceStatus" class="notice"></div>
+</div>
+</section>
+
+<section id="sHistory" class="section">
+<div class="panel"><h2>📅 Attendance History</h2><div style="overflow:auto"><table><thead><tr><th>Subject</th><th>Class</th><th>Date</th><th>Time</th><th>Status</th></tr></thead><tbody id="sHistoryTable"></tbody></table></div></div>
+</section>
+
+<section id="sProfile" class="section">
+<div class="panel" style="max-width:600px">
+<h2>👤 My Profile</h2><div class="avatar" id="avatar">AK</div>
+<label>Name</label><input id="profileName">
+<label>Phone Number</label><input id="profilePhone">
+<label>Gmail</label><input id="profileEmail" type="email">
+<label>DP / Initials</label><input id="profileDP" maxlength="3">
+<label>Roll Number (fixed)</label><input id="profileRoll" disabled>
+<label>Register Number (fixed)</label><input id="profileRegister" disabled>
+<button class="primary" onclick="saveProfile()">Save Profile</button>
+<div id="profileStatus" class="notice"></div>
+</div>
+</section>
+</main>
+</div>
+
+<!-- TEACHER -->
+<div id="teacherDash" class="dashboard hidden">
+<aside class="sidebar">
+<div class="brand">👩‍🏫 Teacher</div>
+<div class="menu">
+<button onclick="teacherSection('tHome')">🏠 Dashboard</button>
+<button onclick="teacherSection('tGenerate')">🔢 Generate Code</button>
+<button onclick="teacherSection('tRecords')">📊 Records</button>
+<button onclick="logout()">🚪 Logout</button>
+</div>
+</aside>
+<main class="main">
+<div class="top"><div><h1>Teacher Dashboard</h1><p class="muted">Generate and control attendance sessions</p></div><button class="secondary" onclick="toggleTheme()">🌙 / ☀️</button></div>
+
+<section id="tHome" class="section active">
+<div class="cards">
+<div class="card"><p class="muted">Students</p><h2>1</h2></div>
+<div class="card"><p class="muted">Present Today</p><h2 class="green" id="tPresent">0</h2></div>
+<div class="card"><p class="muted">Active Code</p><h2 id="tActive">None</h2></div>
+<div class="card"><p class="muted">Code Status</p><h2 id="tStatus">Waiting</h2></div>
+</div>
+<div class="panel" style="margin-top:18px"><h2>Current Attendance Session</h2><div id="teacherSession" class="notice">No active attendance session.</div></div>
+</section>
+
+<section id="tGenerate" class="section">
+<div class="panel" style="max-width:700px">
+<h2>🔢 Generate 6-Digit Attendance Code</h2>
+<label>Class / Section</label><select id="className"><option>II B.Tech A</option><option>II B.Tech B</option></select>
+<label>Subject</label><select id="subject"><option>Python Programming</option><option>Data Structures</option><option>Computer Networks</option><option>Artificial Intelligence</option></select>
+<label>Period</label><select id="period"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+<label>Validity</label><select id="validity"><option value="20">20 seconds</option></select>
+<button class="primary" onclick="generateAttendanceCode()">Generate Code</button>
+<div id="codeBox" class="hidden">
+<div class="code" id="teacherCode">000000</div>
+<div class="timer">Expires in <span id="timer">10</span> seconds</div>
+<div id="sessionInfo" class="notice"></div>
+</div>
+</div>
+</section>
+
+<section id="tRecords" class="section">
+<div class="panel"><h2>📊 Attendance Records</h2><div style="overflow:auto"><table><thead><tr><th>Name</th><th>Roll</th><th>Subject</th><th>Class</th><th>Date</th><th>Time</th><th>Status</th></tr></thead><tbody id="tRecordsTable"></tbody></table></div></div>
+</section>
+</main>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script>
+/* =========================================================
+   SHARED STORAGE
+   Teacher and student dashboards use the SAME localStorage.
+   This fixes the "Teacher has not generated..." problem
+   when both are opened on the same origin/browser.
+========================================================= */
+
+const DEMO_STUDENT={
+  name:"Arun Kumar",roll:"23CS045",register:"REG20260045",
+  phone:"9876543210",email:"arun@gmail.com",password:"1234",dp:"AK",
+  attendance:[]
+};
+
+const DEMO_TEACHER={id:"teacher01",password:"1234"};
+let currentStudent=null, cameraStream=null, countdown=null, pendingSession=null, otpValue=null;
+
+function getStudent(){
+  let x=localStorage.getItem("smartStudent");
+  if(!x){localStorage.setItem("smartStudent",JSON.stringify(DEMO_STUDENT));return {...DEMO_STUDENT,attendance:[]}}
+  return JSON.parse(x);
+}
+function saveStudent(x){localStorage.setItem("smartStudent",JSON.stringify(x))}
+function getSession(){
+  const x=localStorage.getItem("activeAttendance");
+  return x?JSON.parse(x):null;
+}
+function saveSession(x){localStorage.setItem("activeAttendance",JSON.stringify(x))}
+function clearSession(){localStorage.removeItem("activeAttendance")}
+function getTheme(){return localStorage.getItem("theme")||"dark"}
+
+function switchLogin(){
+  const student=document.getElementById("loginRole").value==="student";
+  document.getElementById("studentLogin").classList.toggle("hidden",!student);
+  document.getElementById("teacherLogin").classList.toggle("hidden",student);
+}
+function backLogin(){
+  ["createPage","forgotPage","biometricPage","studentDash","teacherDash"].forEach(id=>document.getElementById(id).classList.add("hidden"));
+  document.getElementById("loginPage").classList.remove("hidden");
+}
+function showCreate(){document.getElementById("loginPage").classList.add("hidden");document.getElementById("createPage").classList.remove("hidden")}
+function showForgot(){document.getElementById("loginPage").classList.add("hidden");document.getElementById("forgotPage").classList.remove("hidden")}
+
+function createAccount(){
+  const name=document.getElementById("newName").value.trim(),roll=document.getElementById("newRoll").value.trim(),reg=document.getElementById("newRegister").value.trim(),phone=document.getElementById("newPhone").value.trim(),email=document.getElementById("newEmail").value.trim(),p=document.getElementById("newPassword").value,p2=document.getElementById("newPassword2").value;
+  if(!name||!roll||!reg||!phone||!email||!p){alert("Please fill all details.");return}
+  if(p!==p2){alert("Passwords do not match.");return}
+  const s={name,roll,register:reg,phone,email,password:p,dp:name.split(/\s+/).map(x=>x[0]).join("").slice(0,2).toUpperCase(),attendance:[]};
+  saveStudent(s); alert("Account created successfully. You can now login."); backLogin();
+}
+
+function studentLogin(){
+  const reg=document.getElementById("loginRegister").value.trim(),p=document.getElementById("loginPassword").value;
+  const s=getStudent();
+  if(reg!==s.register||p!==s.password){alert("Invalid Register Number or Password.");return}
+  startBiometric(s);
+}
+function startBiometric(s){
+  document.getElementById("loginPage").classList.add("hidden");
+  document.getElementById("biometricPage").classList.remove("hidden");
+  document.getElementById("bioText").innerText="Verifying registered fingerprint...";
+  setTimeout(()=>document.getElementById("bioText").innerText="✓ Fingerprint verified",1200);
+  setTimeout(()=>{document.getElementById("biometricPage").classList.add("hidden");currentStudent=s;document.getElementById("studentDash").classList.remove("hidden");loadStudent()},2200);
+}
+function teacherLogin(){
+  if(document.getElementById("teacherId").value==="teacher01"&&document.getElementById("teacherPass").value==="1234"){
+    document.getElementById("loginPage").classList.add("hidden");document.getElementById("teacherDash").classList.remove("hidden");loadTeacher();
+  }else alert("Invalid Teacher ID or Password.");
+}
+
+/* ---------- Teacher creates shared session ---------- */
+function generateAttendanceCode(){
+  const seconds=Number(document.getElementById("validity").value);
+  const code=String(Math.floor(100000+Math.random()*900000));
+  const now=Date.now();
+  const session={
+    code, className:document.getElementById("className").value,
+    subject:document.getElementById("subject").value,
+    period:document.getElementById("period").value,
+    createdAt:now,expiresAt:now+seconds*1000,usedBy:[]
+  };
+  saveSession(session);
+  pendingSession=session;
+  renderTeacherSession(session,seconds);
+  clearInterval(countdown);
+  let remaining=20;
+  countdown=setInterval(()=>{
+    const left=Math.ceil((session.expiresAt-Date.now())/1000);
+    remaining=Math.max(0,left);
+    document.getElementById("timer").innerText=remaining;
+    document.getElementById("tStatus").innerText=remaining>0?"ACTIVE":"Expired";
+    if(left<=0){clearInterval(countdown);clearSession();document.getElementById("tActive").innerText="Expired";document.getElementById("teacherSession").innerHTML="❌ Code expired. Generate a new code.";document.getElementById("sessionInfo").innerHTML="❌ Code expired.";document.getElementById("codeBox").classList.add("hidden")}
+  },250);
+}
+function renderTeacherSession(s,seconds){
+  document.getElementById("codeBox").classList.remove("hidden");
+  document.getElementById("teacherCode").innerText=s.code;
+  document.getElementById("timer").innerText=seconds;
+  document.getElementById("tActive").innerText=s.code;
+  document.getElementById("tStatus").innerText="ACTIVE";
+  const info=`Class: <b>${s.className}</b><br>Subject: <b>${s.subject}</b><br>Period: <b>${s.period}</b>`;
+  document.getElementById("sessionInfo").innerHTML=info;
+  document.getElementById("teacherSession").innerHTML=info+`<br><br>🔢 Active Code: <b>${s.code}</b>`;
+}
+
+/* ---------- Student reads the SAME shared session ---------- */
+function checkAttendanceCode(){
+  const entered=document.getElementById("studentCode").value.trim();
+  const msg=document.getElementById("codeStatus");
+  if(!/^\d{6}$/.test(entered)){msg.innerHTML="❌ Enter exactly 6 digits.";return}
+  const s=getSession();
+  if(!s){msg.innerHTML="❌ Teacher has not generated an attendance code.";return}
+  if(Date.now()>s.expiresAt){clearSession();msg.innerHTML="❌ This code has expired. Ask teacher for a new code.";return}
+  if(s.code!==entered){msg.innerHTML="❌ Incorrect attendance code.";return}
+  const st=getStudent();
+  if(s.usedBy.includes(st.register)){msg.innerHTML="⚠️ Attendance already submitted for this session.";return}
+  pendingSession=s;
+  msg.innerHTML=`✅ Code verified.<br>Class: <b>${s.className}</b><br>Subject: <b>${s.subject}</b><br>Opening camera...`;
+  openCamera();
+}
+async function openCamera(){
+  document.getElementById("cameraPanel").classList.remove("hidden");
+  document.getElementById("faceStatus").innerText="Requesting camera permission...";
+  try{
+    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"},audio:false});
+    document.getElementById("video").srcObject=cameraStream;
+    document.getElementById("faceStatus").innerText="Camera ready. Click Verify Face & Submit Attendance.";
+  }catch(e){document.getElementById("faceStatus").innerText="❌ Camera permission denied/unavailable. Use HTTPS or localhost and allow camera access."}
+}
+function verifyFace(){
+  if(!pendingSession){return}
+  document.getElementById("faceStatus").innerText="🔍 Face verification in progress...";
+  /* DEMO ONLY: replace this step with real face recognition in production. */
+  setTimeout(()=>submitAttendance(),1200);
+}
+function submitAttendance(){
+  const session=getSession();
+  const st=getStudent();
+  if(!session||Date.now()>session.expiresAt){document.getElementById("faceStatus").innerText="❌ Attendance code expired.";stopCamera();return}
+  if(session.usedBy.includes(st.register)){document.getElementById("faceStatus").innerText="⚠️ Already submitted.";stopCamera();return}
+  const now=new Date();
+  const record={name:st.name,roll:st.roll,register:st.register,className:session.className,subject:session.subject,period:session.period,date:now.toLocaleDateString(),time:now.toLocaleTimeString(),status:"Present"};
+  st.attendance.push(record);saveStudent(st);
+  session.usedBy.push(st.register);saveSession(session);
+  stopCamera();
+  document.getElementById("cameraPanel").classList.add("hidden");
+  document.getElementById("studentCode").value="";
+  document.getElementById("sNotice").innerHTML=`✅ <b>Your Attendance has been submitted</b><br><br>Class: ${record.className}<br>Subject: ${record.subject}<br>Period: ${record.period}<br>Date: ${record.date}<br>Time: ${record.time}`;
+  showToast("Your Attendance has been submitted");
+  loadStudent();
+  studentSection("sHome");
+}
+function stopCamera(){
+  if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null}
+}
+
+/* ---------- Student ---------- */
+function loadStudent(){
+  const s=getStudent();currentStudent=s;
+  document.getElementById("studentWelcome").innerText=`Welcome, ${s.name} • ${s.roll}`;
+  const present=s.attendance.length,total=20+present,absent=total-present,percent=total?((present/total)*100).toFixed(2):"0.00";
+  document.getElementById("sPercent").innerText=percent+"%";
+  document.getElementById("sPresent").innerText=present;
+  document.getElementById("sAbsent").innerText=absent;
+  document.getElementById("sTotal").innerText=total;
+  document.getElementById("profileName").value=s.name;
+  document.getElementById("profilePhone").value=s.phone;
+  document.getElementById("profileEmail").value=s.email;
+  document.getElementById("profileDP").value=s.dp;
+  document.getElementById("profileRoll").value=s.roll;
+  document.getElementById("profileRegister").value=s.register;
+  document.getElementById("avatar").innerText=s.dp;
+  const session=getSession();
+  if(session&&Date.now()<session.expiresAt)document.getElementById("sNotice").innerHTML=`🟢 Teacher has an active code for <b>${session.subject}</b>. Go to Mark Attendance and enter the 6-digit code.`;
+  updateHistory();
+}
+function updateHistory(){
+  const s=getStudent(),tb=document.getElementById("sHistoryTable");tb.innerHTML="";
+  [...s.attendance].reverse().forEach(r=>tb.innerHTML+=`<tr><td>${r.subject}</td><td>${r.className}</td><td>${r.date}</td><td>${r.time}</td><td class="green"><b>Present</b></td></tr>`);
+}
+function saveProfile(){
+  const s=getStudent();s.name=document.getElementById("profileName").value.trim();s.phone=document.getElementById("profilePhone").value.trim();s.email=document.getElementById("profileEmail").value.trim();s.dp=document.getElementById("profileDP").value.trim().toUpperCase();if(!s.name||!s.phone||!s.email||!s.dp){alert("Fill all profile fields.");return}saveStudent(s);loadStudent();document.getElementById("profileStatus").innerText="✅ Profile updated successfully.";
+}
+
+/* ---------- Forgot password demo OTP ---------- */
+function sendOTP(){
+  const reg=document.getElementById("forgotRegister").value.trim(),contact=document.getElementById("forgotContact").value.trim(),s=getStudent();
+  if(reg!==s.register||(contact!==s.phone&&contact.toLowerCase()!==s.email.toLowerCase())){alert("Register number and phone/Gmail do not match.");return}
+  otpValue=String(Math.floor(100000+Math.random()*900000));
+  document.getElementById("otpArea").classList.remove("hidden");
+  alert("DEMO verification code: "+otpValue+"\nIn a real system this code would be sent to the verified phone/Gmail.");
+}
+function resetPassword(){
+  if(document.getElementById("otp").value!==otpValue){alert("Invalid verification code.");return}
+  const p=document.getElementById("forgotNew").value,p2=document.getElementById("forgotNew2").value;if(!p||p!==p2){alert("Passwords do not match.");return}
+  const s=getStudent();s.password=p;saveStudent(s);alert("Password changed successfully.");backLogin();
+}
+
+/* ---------- Navigation ---------- */
+function studentSection(id){document.querySelectorAll("#studentDash .section").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");loadStudent()}
+function teacherSection(id){document.querySelectorAll("#teacherDash .section").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");loadTeacher()}
+function loadTeacher(){
+  const s=getStudent(),session=getSession();document.getElementById("tPresent").innerText=s.attendance.length;
+  const tb=document.getElementById("tRecordsTable");tb.innerHTML="";
+  [...s.attendance].reverse().forEach(r=>tb.innerHTML+=`<tr><td>${r.name}</td><td>${r.roll}</td><td>${r.subject}</td><td>${r.className}</td><td>${r.date}</td><td>${r.time}</td><td class="green">Present</td></tr>`);
+  if(session&&Date.now()<session.expiresAt){pendingSession=session;renderTeacherSession(session,Math.ceil((session.expiresAt-Date.now())/1000))}
+}
+function toggleTheme(){document.body.classList.toggle("light");localStorage.setItem("theme",document.body.classList.contains("light")?"light":"dark")}
+function showToast(text){const t=document.getElementById("toast");t.innerText=text;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),3000)}
+function logout(){stopCamera();currentStudent=null;document.getElementById("studentDash").classList.add("hidden");document.getElementById("teacherDash").classList.add("hidden");document.getElementById("loginPage").classList.remove("hidden")}
+document.body.classList.toggle("light",getTheme()==="light");
+
+/* Keep student dashboard aware of a teacher code generated in another tab. */
+window.addEventListener("storage",e=>{
+  if(e.key==="activeAttendance"&&currentStudent)loadStudent();
+});
+setInterval(()=>{if(currentStudent)loadStudent();},1000);
+</script>
+</body>
+</html>
